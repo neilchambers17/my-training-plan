@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="My Training">
+<meta name="theme-color" content="#08080f">
+<title>Volleyball + Hyrox Training App</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap');
+:root {
+  --bg:#08080f; --card:#0d0d1a; --card2:#111120; --border:#1e1e30;
+  --orange:#FF6B35; --teal:#4ECDC4; --purple:#C77DFF;
+  --yellow:#FFD93D; --green:#2D9E6B; --red:#FF5E5E;
+  --text:#edeae4; --muted:#666680; --mid:#999ab0;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.6;display:flex;flex-direction:column;}
+
+/* APP SHELL */
+.app-header{padding:16px 18px 12px;background:linear-gradient(180deg,#0d0d1e,var(--bg));border-bottom:1px solid var(--border);flex-shrink:0;}
+.app-title{font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;}
+.app-title span{color:var(--orange);}
+.app-meta{font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-top:3px;letter-spacing:.08em;}
+
+/* BOTTOM NAV */
+.bottom-nav{display:flex;border-top:1px solid var(--border);background:var(--card);flex-shrink:0;padding-bottom:env(safe-area-inset-bottom);}
+.nav-btn{flex:1;padding:10px 4px 8px;background:none;border:none;color:var(--muted);cursor:pointer;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;display:flex;flex-direction:column;align-items:center;gap:3px;transition:color .15s;}
+.nav-btn .nav-icon{font-size:18px;}
+.nav-btn.active{color:var(--orange);}
+
+/* SCROLL AREA */
+.scroll-area{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.page{display:none;padding:16px 16px 24px;}
+.page.active{display:block;}
+
+/* SECTION HEADER */
+.sec{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);padding-bottom:6px;border-bottom:1px solid rgba(78,205,196,.25);margin:20px 0 12px;}
+.sec:first-child{margin-top:0;}
+
+/* PHASE SELECTOR */
+.phase-row{display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;}
+.phase-row::-webkit-scrollbar{display:none;}
+.phase-btn{flex:0 0 auto;padding:8px 14px;border-radius:8px;border:1.5px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:'DM Mono',monospace;font-size:10px;transition:all .15s;}
+.phase-btn .pb-name{font-weight:700;display:block;}
+.phase-btn .pb-dates{font-size:9px;opacity:.7;display:block;margin-top:1px;}
+.phase-btn.active{border-color:var(--orange);background:rgba(255,107,53,.1);color:var(--orange);}
+
+/* PHASE DESC */
+.phase-desc{border-radius:10px;padding:12px 14px;margin-bottom:14px;border:1px solid rgba(255,107,53,.2);background:rgba(255,107,53,.05);font-size:12px;color:var(--mid);line-height:1.65;}
+.phase-desc strong{color:var(--text);display:block;margin-bottom:3px;font-size:13px;}
+
+/* DAY PILLS */
+.day-row{display:flex;gap:5px;margin-bottom:12px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;}
+.day-row::-webkit-scrollbar{display:none;}
+.day-pill{flex:0 0 auto;padding:7px 11px;border-radius:6px;border:1.5px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:'DM Mono',monospace;font-size:10px;font-weight:700;transition:all .15s;}
+.day-pill.active{border-color:var(--orange);background:rgba(255,107,53,.1);color:var(--orange);}
+
+/* DAY HEADER */
+.day-hdr{border-radius:10px;padding:14px 16px;margin-bottom:12px;border:1px solid rgba(255,107,53,.25);background:rgba(255,107,53,.05);display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+.day-hdr-title{font-family:'DM Serif Display',serif;font-size:18px;font-weight:400;}
+.day-hdr-sub{font-size:11px;color:var(--muted);margin-top:3px;}
+.day-badge{font-family:'DM Mono',monospace;font-size:9px;padding:4px 10px;border-radius:20px;border:1px solid rgba(255,107,53,.35);color:var(--orange);white-space:nowrap;flex-shrink:0;}
+
+/* EXERCISE CHECKLIST */
+.ex-list{display:flex;flex-direction:column;gap:6px;}
+.ex-item{border:1px solid var(--border);border-radius:10px;background:var(--card);overflow:hidden;transition:border-color .15s;}
+.ex-item.done{opacity:.55;background:rgba(45,158,107,.06);border-color:rgba(45,158,107,.3);}
+.ex-top{display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;}
+.ex-check{width:22px;height:22px;border-radius:6px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;font-size:13px;}
+.ex-item.done .ex-check{background:var(--green);border-color:var(--green);}
+.ex-info{flex:1;}
+.ex-name{font-size:13px;line-height:1.3;}
+.ex-item.done .ex-name{text-decoration:line-through;color:var(--muted);}
+.ex-scheme{font-family:'DM Mono',monospace;font-size:10px;color:var(--orange);margin-top:2px;}
+.ex-item.done .ex-scheme{color:var(--green);}
+.ex-arr{font-size:16px;color:var(--border);transition:transform .2s;flex-shrink:0;}
+.ex-item.open .ex-arr{transform:rotate(90deg);}
+.ex-note-area{display:none;padding:0 14px 12px 46px;font-size:11px;color:var(--mid);font-style:italic;line-height:1.55;border-top:1px solid var(--border);padding-top:8px;margin-top:0;}
+.ex-item.open .ex-note-area{display:block;}
+
+/* PROGRESS BAR */
+.progress-wrap{margin-bottom:14px;}
+.progress-label{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:6px;display:flex;justify-content:space-between;}
+.progress-bar{height:4px;background:var(--border);border-radius:4px;overflow:hidden;}
+.progress-fill{height:100%;background:var(--green);border-radius:4px;transition:width .3s;}
+
+/* RESET BTN */
+.reset-btn{margin-top:14px;padding:10px 16px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:'DM Mono',monospace;font-size:10px;width:100%;letter-spacing:.1em;}
+
+/* TOURNAMENT NOTE */
+.tourn-note{margin-top:10px;padding:11px 14px;border-radius:10px;border:1px solid rgba(199,125,255,.25);background:rgba(199,125,255,.05);font-size:12px;color:var(--mid);line-height:1.6;}
+.tourn-note strong{color:var(--purple);}
+
+/* MACRO GRID */
+.macro-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
+.macro-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;}
+.macro-lbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin-bottom:5px;}
+.macro-val{font-family:'DM Serif Display',serif;font-size:20px;color:var(--orange);}
+.macro-note{font-size:10px;color:var(--muted);margin-top:4px;line-height:1.4;}
+
+/* GENERIC TABLE */
+.g-table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:8px;}
+.g-table th{padding:7px 9px;text-align:left;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.07em;}
+.g-table td{padding:7px 9px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5;}
+.g-table tr:nth-child(odd) td{background:var(--card);}
+.g-table tr:nth-child(even) td{background:var(--card2);}
+
+/* MEAL CARDS */
+.meal-card{margin-bottom:10px;border-radius:10px;overflow:hidden;border:1px solid var(--border);}
+.meal-hdr{padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;}
+.meal-num-badge{font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);}
+.meal-title{font-size:13px;font-weight:500;flex:1;}
+.meal-time-tag{font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);}
+.meal-kcal{font-family:'DM Mono',monospace;font-size:9px;font-weight:700;}
+.meal-body-area{display:none;}
+.meal-card.open .meal-body-area{display:block;}
+.meal-arr{font-size:16px;color:var(--border);transition:transform .2s;flex-shrink:0;}
+.meal-card.open .meal-arr{transform:rotate(90deg);}
+.food-table{width:100%;border-collapse:collapse;font-size:11px;}
+.food-table th{background:rgba(0,0,0,.3);color:var(--muted);font-family:'DM Mono',monospace;font-size:9px;padding:6px 9px;text-align:left;}
+.food-table td{padding:7px 9px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.4;}
+.food-table td:nth-child(3){color:var(--orange);font-family:'DM Mono',monospace;font-weight:700;}
+.food-table td:nth-child(4){color:var(--muted);font-style:italic;font-size:10px;}
+.meal-tip-bar{background:rgba(45,158,107,.07);border-top:1px solid var(--border);padding:9px 12px;font-size:11px;color:var(--green);font-style:italic;line-height:1.55;}
+
+/* LATE NIGHT */
+.ln-item{background:var(--card);border:1px solid var(--border);border-radius:9px;padding:11px 13px;display:flex;gap:12px;align-items:flex-start;margin-bottom:7px;}
+.ln-p{font-family:'DM Mono',monospace;font-size:11px;color:var(--purple);font-weight:700;min-width:32px;padding-top:1px;}
+.ln-f{font-size:12px;}
+.ln-fn{font-size:10px;color:var(--muted);margin-top:2px;font-style:italic;}
+.ln-c{font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-left:auto;white-space:nowrap;}
+
+/* SUPP LIST */
+.supp-item{background:var(--card);border:1px solid rgba(199,125,255,.2);border-radius:9px;padding:11px 13px;margin-bottom:7px;}
+.supp-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:4px;}
+.supp-name{font-size:12px;font-weight:500;color:var(--purple);}
+.supp-dose{font-family:'DM Mono',monospace;font-size:10px;color:var(--orange);font-weight:700;}
+.supp-meta{font-size:10px;color:var(--muted);font-style:italic;margin-bottom:3px;}
+.supp-why{font-size:11px;color:var(--mid);line-height:1.5;}
+
+/* LF TABLE */
+.lf-table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:8px;}
+.lf-table th{padding:7px 9px;text-align:left;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.07em;}
+.lf-table td{padding:7px 9px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.4;}
+.lf-table tr:nth-child(odd) td{background:var(--card);}
+.lf-table tr:nth-child(even) td{background:var(--card2);}
+.lf-table td:first-child{color:var(--red);font-weight:500;}
+.lf-table td:last-child{color:var(--green);}
+
+/* CHALLENGE */
+.ch-item{margin-bottom:10px;border-radius:10px;overflow:hidden;}
+.ch-hdr{padding:10px 14px;font-weight:700;font-size:12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;}
+.ch-body{background:var(--card);border:1px solid var(--border);border-top:none;padding:12px 14px;font-size:12px;color:var(--mid);line-height:1.7;display:none;}
+.ch-item.open .ch-body{display:block;}
+.ch-arr{font-size:16px;opacity:.5;transition:transform .2s;}
+.ch-item.open .ch-arr{transform:rotate(90deg);}
+
+/* GROCERY */
+.grocery-sec{margin-bottom:14px;}
+.grocery-hdr{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;font-weight:700;padding:8px 12px;border-radius:8px 8px 0 0;}
+.grocery-items{background:var(--card);border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;}
+.grocery-row{padding:8px 12px;border-bottom:1px solid var(--border);font-size:12px;color:var(--mid);display:flex;align-items:center;gap:10px;cursor:pointer;}
+.grocery-row:last-child{border-bottom:none;}
+.grocery-check{width:18px;height:18px;border-radius:4px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;transition:all .15s;}
+.grocery-row.checked .grocery-check{background:var(--green);border-color:var(--green);}
+.grocery-row.checked span{text-decoration:line-through;color:var(--muted);}
+
+/* STATIONS */
+.station-item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:13px 14px;margin-bottom:8px;}
+.station-top{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.station-num{font-family:'DM Mono',monospace;font-size:10px;color:var(--orange);}
+.station-name{font-size:14px;flex:1;}
+.station-dist{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);}
+.station-xover{font-size:11px;color:var(--teal);margin-bottom:3px;}
+.station-cue{font-size:11px;color:var(--mid);font-style:italic;}
+
+/* UTILITY */
+.tip-bar{background:rgba(45,158,107,.07);border:1px solid rgba(45,158,107,.2);border-radius:8px;padding:10px 13px;font-size:11px;color:var(--green);font-style:italic;line-height:1.55;margin-bottom:12px;}
+.info-text{font-size:12px;color:var(--mid);line-height:1.65;margin-bottom:14px;}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="app-title">Training &amp; Nutrition <span>App</span></div>
+  <div class="app-meta">6'0" · 210 lbs · Volleyball + Hyrox · Sep Race Target</div>
+</div>
+
+<div class="scroll-area">
+
+  <!-- ══ WORKOUT PAGE ══ -->
+  <div class="page active" id="page-workout">
+    <div class="sec">Phase</div>
+    <div class="phase-row" id="phase-row"></div>
+    <div class="phase-desc" id="phase-desc"></div>
+    <div class="sec">Day</div>
+    <div class="day-row" id="day-row"></div>
+    <div class="day-hdr" id="day-hdr"></div>
+    <div class="progress-wrap" id="progress-wrap"></div>
+    <div class="ex-list" id="ex-list"></div>
+    <div id="tourn-note-area"></div>
+    <button class="reset-btn" onclick="resetDay()">↺ Reset Today's Checklist</button>
+  </div>
+
+  <!-- ══ NUTRITION PAGE ══ -->
+  <div class="page" id="page-nutrition">
+    <div class="sec">Daily Targets</div>
+    <div class="macro-grid">
+      <div class="macro-card"><div class="macro-lbl">Calories</div><div class="macro-val">2,400–2,600</div><div class="macro-note">Moderate deficit for fat loss</div></div>
+      <div class="macro-card"><div class="macro-lbl">Protein</div><div class="macro-val">190–210g</div><div class="macro-note">~1g per lb. Top priority.</div></div>
+      <div class="macro-card"><div class="macro-lbl">Carbs</div><div class="macro-val">200–260g</div><div class="macro-note">Higher on training days</div></div>
+      <div class="macro-card"><div class="macro-lbl">Fats</div><div class="macro-val">70–85g</div><div class="macro-note">Don't go below 70g</div></div>
+    </div>
+    <div class="sec">Calories by Day Type</div>
+    <table class="g-table">
+      <tr><th style="background:rgba(78,205,196,.12);color:var(--teal)">Day</th><th style="background:rgba(78,205,196,.12);color:var(--teal)">Cal</th><th style="background:rgba(78,205,196,.12);color:var(--teal)">Carbs</th><th style="background:rgba(78,205,196,.12);color:var(--teal)">Why</th></tr>
+      <tr><td>Rest (Sun)</td><td style="color:var(--orange);font-family:'DM Mono',monospace;font-weight:700">2,350</td><td>180g</td><td>Recover and repair.</td></tr>
+      <tr><td>Training (M/T/F)</td><td style="color:var(--orange);font-family:'DM Mono',monospace;font-weight:700">2,550</td><td>230g</td><td>Lifting demands fuel.</td></tr>
+      <tr><td>Run + Mobility (Thu)</td><td style="color:var(--orange);font-family:'DM Mono',monospace;font-weight:700">2,450</td><td>210g</td><td>Aerobic focus.</td></tr>
+      <tr><td>Volleyball (Wed)</td><td style="color:var(--orange);font-family:'DM Mono',monospace;font-weight:700">2,600</td><td>250g</td><td>Extra carbs for play.</td></tr>
+      <tr><td>Tournament (Sat)</td><td style="color:var(--orange);font-family:'DM Mono',monospace;font-weight:700">2,900+</td><td>300g+</td><td>8 hrs sport. Fuel hard.</td></tr>
+    </table>
+    <div class="sec">Daily Meals</div>
+    <div class="tip-bar">Tap any meal to expand. All lactose-free. Under 30 min prep.</div>
+    <div id="meal-list"></div>
+    <div class="sec">Late-Night Options</div>
+    <div class="tip-bar">Choose ONE if hungry — high protein, low carb only.</div>
+    <div class="ln-item"><div class="ln-p">25g</div><div><div class="ln-f">Lactose-free cottage cheese (170g)</div><div class="ln-fn">Casein — slow digesting, feeds muscles overnight.</div></div><div class="ln-c">130 cal</div></div>
+    <div class="ln-item"><div class="ln-p">25g</div><div><div class="ln-f">Protein shake (water only)</div><div class="ln-fn">Zero prep. Kills hunger fast.</div></div><div class="ln-c">120 cal</div></div>
+    <div class="ln-item"><div class="ln-p">12g</div><div><div class="ln-f">2 hard boiled eggs + hot sauce</div><div class="ln-fn">Pre-cooked, grab and go.</div></div><div class="ln-c">140 cal</div></div>
+    <div class="ln-item"><div class="ln-p">18g</div><div><div class="ln-f">Turkey slices (80g) + mustard</div><div class="ln-fn">Zero prep. High protein, almost no calories.</div></div><div class="ln-c">110 cal</div></div>
+    <div class="ln-item"><div class="ln-p">5g</div><div><div class="ln-f">2 rice cakes + almond butter</div><div class="ln-fn">Only if you did a heavy training day.</div></div><div class="ln-c">180 cal</div></div>
+  </div>
+
+  <!-- ══ SPORT PAGE ══ -->
+  <div class="page" id="page-sport">
+    <div class="sec">Volleyball Night (Wednesdays)</div>
+    <table class="g-table">
+      <tr><th style="background:rgba(255,211,61,.12);color:var(--yellow)">Timing</th><th style="background:rgba(255,211,61,.12);color:var(--yellow)">What to Eat</th><th style="background:rgba(255,211,61,.12);color:var(--yellow)">Why</th></tr>
+      <tr><td>12pm post-lift</td><td>Normal post-workout Meal 3</td><td>Refuel from midday lift.</td></tr>
+      <tr><td>3:00–4:00 PM</td><td>150g chicken + 150g rice + banana</td><td>Carb load 2–3 hrs before.</td></tr>
+      <tr><td>5:30 PM</td><td>Rice cakes x2 + almond butter</td><td>Top up glycogen.</td></tr>
+      <tr><td>During (every 30-45 min)</td><td>Water + electrolytes. Banana/dates if energy drops.</td><td>Replace sodium + potassium.</td></tr>
+      <tr><td>Post-volleyball</td><td>Protein shake + rice cakes</td><td>Muscle repair before bed.</td></tr>
+    </table>
+    <div class="sec" style="margin-top:20px">Tournament Day (Saturdays)</div>
+    <div class="tip-bar">Pack your food. Do NOT rely on venue food. Eat every 90 min — don't wait until hungry.</div>
+    <table class="g-table">
+      <tr><th style="background:rgba(255,107,53,.12);color:var(--orange)">Timing</th><th style="background:rgba(255,107,53,.12);color:var(--orange)">Meal / Snack</th><th style="background:rgba(255,107,53,.12);color:var(--orange)">~Cal</th></tr>
+      <tr><td>Night before</td><td>Carb-heavy dinner: pasta/rice + protein</td><td style="color:var(--orange);font-family:'DM Mono',monospace">700–800</td></tr>
+      <tr><td>2 hrs before</td><td>Oats + egg whites + banana + almond butter</td><td style="color:var(--orange);font-family:'DM Mono',monospace">520</td></tr>
+      <tr><td>Between games</td><td>Banana, dates, rice cakes, sports drink</td><td style="color:var(--orange);font-family:'DM Mono',monospace">150–250</td></tr>
+      <tr><td>Lunch break</td><td>Chicken + white rice + avocado (packed!)</td><td style="color:var(--orange);font-family:'DM Mono',monospace">600–700</td></tr>
+      <tr><td>Mid-afternoon</td><td>Protein bar (no dairy) + fruit + electrolytes</td><td style="color:var(--orange);font-family:'DM Mono',monospace">250–300</td></tr>
+      <tr><td>Post-tournament</td><td>Salmon/chicken + rice + veg</td><td style="color:var(--orange);font-family:'DM Mono',monospace">700–800</td></tr>
+      <tr><td>Before bed</td><td>Protein shake or LF cottage cheese</td><td style="color:var(--orange);font-family:'DM Mono',monospace">130–160</td></tr>
+    </table>
+    <div class="sec">Hyrox Stations</div>
+    <div id="station-list"></div>
+  </div>
+
+  <!-- ══ GROCERY PAGE ══ -->
+  <div class="page" id="page-grocery">
+    <div class="sec">Weekly Grocery List</div>
+    <div class="tip-bar">Tap items to check them off as you shop.</div>
+    <div id="grocery-list"></div>
+    <button class="reset-btn" onclick="resetGrocery()">↺ Uncheck All Items</button>
+    <div class="sec">Lactose-Free Swaps</div>
+    <table class="lf-table">
+      <tr><th style="background:rgba(255,94,94,.1);color:var(--red)">AVOID</th><th style="background:rgba(45,158,107,.08);color:var(--green)">SAFE SWAP</th></tr>
+      <tr><td>Regular milk</td><td>Oat milk, almond milk, coconut milk</td></tr>
+      <tr><td>Regular yogurt</td><td>Coconut yogurt, Lactaid yogurt</td></tr>
+      <tr><td>Regular cottage cheese</td><td>Lactose-free cottage cheese (Green Valley)</td></tr>
+      <tr><td>Whey concentrate</td><td>Whey ISOLATE or pea protein</td></tr>
+      <tr><td>Butter</td><td>Olive oil, coconut oil, ghee</td></tr>
+      <tr><td>Cream / half-and-half</td><td>Oat milk creamer, coconut cream</td></tr>
+      <tr><td>Cheese</td><td>Nutritional yeast (adds cheesy flavor)</td></tr>
+      <tr><td>Protein bars w/ milk</td><td>Avoid "milk solids" + "whey concentrate"</td></tr>
+    </table>
+    <div class="sec">Supplements</div>
+    <div id="supp-list"></div>
+  </div>
+
+</div><!-- end scroll area -->
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <button class="nav-btn active" id="nav-workout" onclick="showPage('workout')">
+    <span class="nav-icon">🏋️</span>Workout
+  </button>
+  <button class="nav-btn" id="nav-nutrition" onclick="showPage('nutrition')">
+    <span class="nav-icon">🥗</span>Nutrition
+  </button>
+  <button class="nav-btn" id="nav-sport" onclick="showPage('sport')">
+    <span class="nav-icon">🏐</span>Sport
+  </button>
+  <button class="nav-btn" id="nav-grocery" onclick="showPage('grocery')">
+    <span class="nav-icon">🛒</span>Grocery
+  </button>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════════
+const PHASES = {
+  p1:{label:"Phase 1",dates:"Mar–May",desc:"<strong>Foundation — Build the base, don't break the vertical.</strong> Learn all Hyrox movements, build aerobic base with Zone 2 runs, lock in explosive lower body work. Plyometrics always come first.",
+    days:[
+      {id:"mon",label:"MON",title:"Lower Power",sub:"Vertical & Explosiveness",badge:"🏐 Vertical Priority",
+       ex:[
+        {n:"Box Jumps",s:"4",r:"5",note:"ALWAYS first — before any fatigue. Max height, full reset each rep."},
+        {n:"Barbell Back Squat",s:"4",r:"5",note:"80-85% 1RM. Speed out of the hole."},
+        {n:"Romanian Deadlift",s:"3",r:"8",note:"Hip hinge focus."},
+        {n:"Bulgarian Split Squat",s:"3",r:"10 ea",note:"Rear foot elevated."},
+        {n:"Sandbag Lunges (light)",s:"3",r:"20m",note:"Hyrox pattern intro — keep light this phase."},
+        {n:"Single-Leg Calf Raises",s:"3",r:"15 ea",note:"Slow eccentric, fast concentric."},
+        {n:"Hanging Leg Raises",s:"3",r:"12",note:"Core for jumping."},
+       ]},
+      {id:"tue",label:"TUE",title:"Upper + Hyrox Stations",sub:"Strength & Movement Learning",badge:"🏋️ Hyrox Intro",
+       ex:[
+        {n:"Ski Erg",s:"3",r:"500m",note:"Arms + hips, not just arms. Think lat pulldown."},
+        {n:"Rowing",s:"3",r:"500m",note:"Legs first, lean, then arms."},
+        {n:"Incline Dumbbell Press",s:"4",r:"10-12",note:"Upper chest priority — targets chest fat."},
+        {n:"Pull-Ups (Weighted)",s:"4",r:"6-8",note:"Add weight when 8 feels easy."},
+        {n:"Seated Cable Row",s:"3",r:"12",note:"Retract scapula fully."},
+        {n:"Dumbbell Lateral Raise",s:"3",r:"15",note:"No momentum."},
+        {n:"Face Pulls",s:"3",r:"20",note:"Shoulder health for volleyball."},
+        {n:"Wall Balls",s:"3",r:"20",note:"10ft target. Hyrox station intro."},
+       ]},
+      {id:"wed",label:"WED",title:"🏐 Volleyball Night",sub:"2-Hour Game Play",badge:"🏐 Sport",
+       ex:[
+        {n:"Dynamic Warm-Up",s:"1",r:"10 min",note:"Leg swings, hip circles, arm circles."},
+        {n:"2 Hours Volleyball",s:"—",r:"—",note:"This IS your conditioning today."},
+        {n:"Cool-Down Stretch",s:"1",r:"10 min",note:"Hip flexors, quads, shoulders — daily non-negotiable."},
+       ]},
+      {id:"thu",label:"THU",title:"Zone 2 Run + Mobility",sub:"Aerobic Base Building",badge:"🏃 Hyrox Base",
+       ex:[
+        {n:"Easy Run (Zone 2)",s:"1",r:"30-40 min",note:"Conversational pace — full sentences while running."},
+        {n:"Foam Rolling",s:"1",r:"10 min",note:"Quads, IT band, thoracic spine."},
+        {n:"Hip Flexor Stretch",s:"3",r:"60 sec ea",note:"Tight hip flexors kill your vertical. Do daily."},
+        {n:"Ankle Mobility Drills",s:"2",r:"10 ea",note:"Landing mechanics."},
+        {n:"Band Pull-Aparts",s:"3",r:"20",note:"Posture + shoulder health."},
+       ]},
+      {id:"fri",label:"FRI",title:"Lower Hypertrophy",sub:"Glutes, Hamstrings & Carries",badge:"💪 Strength",
+       ex:[
+        {n:"Trap Bar Deadlift",s:"4",r:"8",note:"Full range. Carries over to Hyrox and vertical."},
+        {n:"Leg Press",s:"3",r:"12",note:"Full range — don't half-rep."},
+        {n:"Glute Bridges / Hip Thrust",s:"4",r:"12",note:"Barbell loaded. Posterior chain = vertical power."},
+        {n:"Nordic Hamstring Curls",s:"3",r:"8",note:"Injury prevention + eccentric strength."},
+        {n:"Farmer Carries",s:"4",r:"40m",note:"Hyrox station 6. Build to heavy."},
+        {n:"Standing Calf Raises",s:"4",r:"20",note:"Fast and explosive at the top."},
+        {n:"Plank Variations",s:"3",r:"45 sec",note:"RKC plank and side plank."},
+       ]},
+      {id:"sat",label:"SAT",title:"Hyrox Circuit / Tournament",sub:"Flex Day",badge:"⚡ Flex",tourn:true,
+       ex:[
+        {n:"🏐 TOURNAMENT DAY",s:"—",r:"—",note:"Skip all lifting. Compete, fuel well, recover."},
+        {n:"— OR — Hyrox Circuit (no runs between stations yet)",s:"—",r:"—",note:""},
+        {n:"Ski Erg",s:"1",r:"1000m",note:""},
+        {n:"Sled Push",s:"1",r:"50m",note:"Light — focus on drive mechanics."},
+        {n:"Sled Pull",s:"1",r:"50m",note:"Hinge, pull in rows."},
+        {n:"Burpee Broad Jumps",s:"1",r:"50m",note:"Consistent jump length each rep."},
+        {n:"Row",s:"1",r:"1000m",note:"Legs, lean, arms."},
+        {n:"Farmers Carry",s:"1",r:"200m",note:"Brace core, tall spine."},
+        {n:"Sandbag Lunges",s:"1",r:"100m",note:"Alternating knees, own the tempo."},
+        {n:"Wall Balls",s:"1",r:"75-100",note:"10ft target. Breathe on the catch."},
+       ]},
+      {id:"sun",label:"SUN",title:"Full Rest",sub:"Eat, Sleep, Recover",badge:"😴 Recovery",
+       ex:[
+        {n:"Sleep 8+ Hours",s:"—",r:"—",note:"Non-negotiable for vertical and endurance adaptation."},
+        {n:"Hit Protein Goal (190-210g)",s:"—",r:"—",note:"Spread across 4-5 meals."},
+        {n:"Light Walk (Optional)",s:"1",r:"20 min",note:"Blood flow, not effort."},
+        {n:"Meal Prep for the Week",s:"—",r:"—",note:"Set yourself up for success."},
+       ]},
+    ]},
+  p2:{label:"Phase 2",dates:"Jun–Jul",desc:"<strong>Integration — Stack the demands. Build resilience.</strong> Compromised workouts begin (station → immediate 1km run). Tempo running. Approach jumps for volleyball-specific vertical. Full race simulations Saturdays.",
+    days:[
+      {id:"mon",label:"MON",title:"Lower Power + Approach Jumps",sub:"Volleyball-Specific Vertical",badge:"🏐 Vertical Priority",
+       ex:[
+        {n:"Approach Jump Practice",s:"5",r:"5",note:"Full 3-step approach. Max height. Sport-specific this phase."},
+        {n:"Depth Drop → Reactive Jump",s:"4",r:"6",note:"Step off box, land, immediately explode up. Trains amortization."},
+        {n:"Barbell Back Squat",s:"4",r:"5",note:"Keep lifting heavy. Strength is the foundation of your vertical."},
+        {n:"Sandbag Lunges",s:"4",r:"100m",note:"Now at Hyrox-weight. Not just accessory work."},
+        {n:"Single-Leg Calf Raises",s:"4",r:"15 ea",note:""},
+        {n:"Core Circuit",s:"3",r:"3 rounds",note:"Hollow holds, dead bugs, hanging leg raises."},
+       ]},
+      {id:"tue",label:"TUE",title:"Upper + Compromised Run",sub:"Hyrox Fatigue Training Begins",badge:"🔥 Compromised",
+       ex:[
+        {n:"Incline DB Press",s:"4",r:"10",note:""},
+        {n:"Pull-Ups",s:"4",r:"8",note:""},
+        {n:"Ski Erg",s:"3",r:"500m",note:""},
+        {n:"Wall Balls",s:"1",r:"100",note:""},
+        {n:"⚡ COMPROMISED 1km Run",s:"1",r:"1km",note:"IMMEDIATELY after wall balls. Legs like concrete — that's the point."},
+        {n:"Row",s:"3",r:"500m",note:""},
+        {n:"Face Pulls + Lateral Raises",s:"3",r:"15 ea",note:"Superset."},
+       ]},
+      {id:"wed",label:"WED",title:"🏐 Volleyball Night",sub:"2-Hour Game Play",badge:"🏐 Sport",
+       ex:[
+        {n:"Dynamic Warm-Up",s:"1",r:"10 min",note:""},
+        {n:"2 Hours Volleyball",s:"—",r:"—",note:"Prioritize approach mechanics and reading the game."},
+        {n:"Cool-Down Stretch",s:"1",r:"10 min",note:""},
+       ]},
+      {id:"thu",label:"THU",title:"Tempo Run + Stations",sub:"Running Quality Builds",badge:"🏃 Hyrox Build",
+       ex:[
+        {n:"Tempo Run",s:"1",r:"4-5km",note:"Comfortably hard — 7/10 effort. Too hard for a full conversation."},
+        {n:"Sled Push",s:"4",r:"30m",note:"Heavy. Drive from the hips."},
+        {n:"Sled Pull",s:"4",r:"30m",note:""},
+        {n:"Farmer Carries",s:"4",r:"50m",note:"Increase weight this phase."},
+        {n:"Hip Flexor + Quad Stretch",s:"1",r:"15 min",note:"Your legs are working hard — don't skip this."},
+       ]},
+      {id:"fri",label:"FRI",title:"Lower Hypertrophy",sub:"Maintain Strength Foundation",badge:"💪 Strength",
+       ex:[
+        {n:"Trap Bar Deadlift",s:"4",r:"8",note:""},
+        {n:"Leg Press",s:"3",r:"12",note:""},
+        {n:"Hip Thrusts",s:"4",r:"12",note:"Heavy loaded."},
+        {n:"Nordic Hamstring Curls",s:"3",r:"8",note:""},
+        {n:"Walking Lunges",s:"3",r:"20m",note:""},
+        {n:"Standing Calf Raises",s:"4",r:"20",note:""},
+       ]},
+      {id:"sat",label:"SAT",title:"Full Race Simulation / Tournament",sub:"Race Rehearsal",badge:"⚡ Simulation",tourn:true,
+       ex:[
+        {n:"🏐 TOURNAMENT DAY",s:"—",r:"—",note:"Rest. Compete. Recover."},
+        {n:"— OR — Full Simulation (time yourself!)",s:"—",r:"—",note:"Run 1km between EVERY station:"},
+        {n:"1km Run → Ski Erg 1000m",s:"1",r:"—",note:""},
+        {n:"1km Run → Sled Push 50m",s:"1",r:"—",note:""},
+        {n:"1km Run → Sled Pull 50m",s:"1",r:"—",note:""},
+        {n:"1km Run → Burpee Broad Jumps 80m",s:"1",r:"—",note:""},
+        {n:"1km Run → Row 1000m",s:"1",r:"—",note:""},
+        {n:"1km Run → Farmers Carry 200m",s:"1",r:"—",note:""},
+        {n:"1km Run → Sandbag Lunges 100m",s:"1",r:"—",note:""},
+        {n:"1km Run → Wall Balls 100 reps",s:"1",r:"—",note:"Record your total time — this is your benchmark."},
+       ]},
+      {id:"sun",label:"SUN",title:"Full Rest",sub:"Mandatory Recovery",badge:"😴 Recovery",
+       ex:[
+        {n:"Sleep 8+ Hours",s:"—",r:"—",note:""},
+        {n:"High Protein + Carbs",s:"—",r:"—",note:"Refuel. Bump calories 200-300 on simulation day."},
+        {n:"Light Walk",s:"1",r:"20 min",note:""},
+       ]},
+    ]},
+  p3:{label:"Phase 3",dates:"Aug–Sep",desc:"<strong>Race Prep — Sharpen. Taper. Compete.</strong> No new PRs. Volume drops, intensity stays sharp. 2-week taper into race day. Volleyball continues. Trust the work.",
+    days:[
+      {id:"mon",label:"MON",title:"Vertical Maintenance",sub:"Keep the Gains, No New PRs",badge:"🏐 Maintain",
+       ex:[
+        {n:"Approach Jumps",s:"4",r:"5",note:"Quality over quantity. Stay explosive."},
+        {n:"Box Jumps",s:"3",r:"5",note:""},
+        {n:"Squat (75% 1RM)",s:"3",r:"5",note:"Maintain strength — no PR attempts this close to race."},
+        {n:"Sandbag Lunges (race weight)",s:"3",r:"60m",note:"Simulate exactly what you'll feel on race day."},
+       ]},
+      {id:"tue",label:"TUE",title:"Upper + Hyrox Sharpening",sub:"Race Weight, Race Pace",badge:"⚡ Race Sharp",
+       ex:[
+        {n:"Ski Erg (race pace)",s:"3",r:"500m",note:"Practice your race split."},
+        {n:"Wall Balls (race weight)",s:"2",r:"50",note:"10ft. Stay rhythmic."},
+        {n:"Row (race pace)",s:"2",r:"500m",note:""},
+        {n:"Incline DB Press",s:"3",r:"10",note:""},
+        {n:"Pull-Ups",s:"3",r:"8",note:""},
+        {n:"Face Pulls",s:"3",r:"20",note:""},
+       ]},
+      {id:"wed",label:"WED",title:"🏐 Volleyball Night",sub:"2-Hour Game Play",badge:"🏐 Sport",
+       ex:[
+        {n:"Dynamic Warm-Up",s:"1",r:"10 min",note:""},
+        {n:"2 Hours Volleyball",s:"—",r:"—",note:"Keep competing. This is still your sport."},
+        {n:"Cool-Down Stretch",s:"1",r:"15 min",note:"Longer cool-down this phase to protect the legs."},
+       ]},
+      {id:"thu",label:"THU",title:"Short Run + Carry Combo",sub:"Taper Into Race",badge:"🏃 Taper",
+       ex:[
+        {n:"Easy Run",s:"1",r:"20-30 min",note:"Zone 2 only. Volume drops — trust the process."},
+        {n:"Farmers Carry (race weight)",s:"3",r:"60m",note:""},
+        {n:"Sled Push",s:"2",r:"30m",note:"Light — just stay sharp."},
+        {n:"Full Mobility Work",s:"1",r:"20 min",note:"Hips, ankles, thoracic spine."},
+       ]},
+      {id:"fri",label:"FRI",title:"Taper / Full REST Race Week",sub:"2 Weeks Out: Light | Race Week: REST",badge:"🛑 Taper",
+       ex:[
+        {n:"2 Weeks Out: Goblet Squats",s:"3",r:"12",note:"Light — nothing to failure."},
+        {n:"2 Weeks Out: Bodyweight Lunges",s:"3",r:"20m",note:""},
+        {n:"Race Week: NO LIFTING",s:"—",r:"—",note:"Save every drop of energy for Saturday."},
+        {n:"Stretch + Walk",s:"1",r:"30 min",note:"Stay loose, not taxed."},
+       ]},
+      {id:"sat",label:"SAT",title:"🏆 Race Day / Final Sim",sub:"Trust Your Training",badge:"🏆 Race",
+       ex:[
+        {n:"Early Aug: Final full simulation",s:"—",r:"—",note:"Beat your Phase 2 time."},
+        {n:"Mid-Aug onward: Race-pace station practice only",s:"—",r:"—",note:"No full simulation."},
+        {n:"Race Day: Dynamic warm-up",s:"1",r:"15 min",note:"Light jog, leg swings, arm circles."},
+        {n:"Race Day: Nutrition (2hrs before)",s:"—",r:"—",note:"Carb + protein meal. Rice or oats. No new foods."},
+        {n:"Race Day: Hydration",s:"—",r:"—",note:"Start the night before. Bring electrolytes."},
+        {n:"PACE the runs. ATTACK the stations.",s:"—",r:"—",note:"Start runs at 70% effort and build. Don't go out too fast."},
+       ]},
+      {id:"sun",label:"SUN",title:"Full Rest",sub:"Post-Race Recovery",badge:"😴 Recovery",
+       ex:[
+        {n:"Sleep 8+ Hours",s:"—",r:"—",note:""},
+        {n:"High protein + high carb",s:"—",r:"—",note:"Recovery nutrition matters most the day after."},
+        {n:"Light Walk",s:"1",r:"20 min",note:""},
+       ]},
+    ]},
+};
+
+const MEALS = [
+  {num:"01",name:"Breakfast",time:"7:00–8:00 AM",cal:"520",p:"42g",c:"55g",f:"14g",color:"#FF6B35",
+   foods:[
+    {f:"Oats (rolled, dry)",a:"80g / 1 cup",p:"10g",note:"Water or oat milk only. No regular milk."},
+    {f:"Egg whites",a:"6 whites",p:"21g",note:"Microwave or scramble — 3 min."},
+    {f:"Whole egg",a:"1 large",p:"6g",note:"Adds healthy fat and richness."},
+    {f:"Banana",a:"1 medium",p:"1g",note:"Fast carbs + potassium."},
+    {f:"Almond butter",a:"1 tbsp",p:"3g",note:"Check label — some brands add milk."},
+    {f:"Black coffee / green tea",a:"1 cup",p:"0g",note:"No cream. Oat milk fine."},
+   ],tip:"Prep the night before: portion oats, crack eggs in the morning. Total: 8 min."},
+  {num:"02",name:"Mid-Morning Snack",time:"10:30–11:00 AM",cal:"310",p:"38g",c:"22g",f:"8g",color:"#4ECDC4",
+   foods:[
+    {f:"Lactose-free protein shake",a:"1 scoop",p:"25g",note:"Whey isolate (very low lactose) or pea protein."},
+    {f:"Rice cakes",a:"3 cakes",p:"2g",note:"Light carbs before your 12pm workout."},
+    {f:"Almond butter",a:"1 tbsp",p:"3g",note:"On the rice cakes."},
+    {f:"Apple or orange",a:"1 medium",p:"0g",note:"Vitamin C + fast carbs."},
+   ],tip:"Pre-workout meal on training days. Eat by 11am. Solves the 'not eating enough' problem."},
+  {num:"03",name:"Lunch / Post-Workout",time:"1:30–2:30 PM",cal:"680",p:"55g",c:"72g",f:"18g",color:"#FF6B35",
+   foods:[
+    {f:"Chicken breast (grilled)",a:"200g",p:"46g",note:"Grill 4-5 at once and refrigerate. Reheats in 2 min."},
+    {f:"Brown or white rice",a:"200g cooked",p:"4g",note:"White rice post-workout for faster absorption."},
+    {f:"Broccoli or mixed veg",a:"150g",p:"3g",note:"Microwave steam bag — 5 min, no prep."},
+    {f:"Avocado",a:"1/2 medium",p:"1g",note:"Healthy fat. Replaces dairy-based dressings."},
+    {f:"Olive oil + lemon",a:"1 tbsp oil",p:"0g",note:"Simple, anti-inflammatory, no dairy."},
+    {f:"Water + electrolytes",a:"500ml+",p:"0g",note:"Post-workout rehydration."},
+   ],tip:"Eat within 60 min of finishing your workout. Most important meal on training days."},
+  {num:"04",name:"Afternoon Snack",time:"4:30–5:00 PM",cal:"340",p:"35g",c:"28g",f:"10g",color:"#4ECDC4",
+   foods:[
+    {f:"Canned tuna (in water)",a:"1 can (140g)",p:"28g",note:"No prep. Mix with mustard or hot sauce."},
+    {f:"Whole grain crackers",a:"20g / 8 crackers",p:"3g",note:"Fiber + slow carbs. Kills hunger until dinner."},
+    {f:"Baby carrots or celery",a:"1 cup",p:"1g",note:"Zero prep. Fills stomach volume."},
+    {f:"Mixed nuts (unsalted)",a:"20g handful",p:"4g",note:"Pre-portion into bags to avoid overeating."},
+   ],tip:"This snack directly fights late-night snacking. When you eat enough during the day, cravings disappear."},
+  {num:"05",name:"Dinner",time:"7:00–8:00 PM",cal:"620",p:"50g",c:"55g",f:"18g",color:"#FF6B35",
+   foods:[
+    {f:"Salmon (or tilapia)",a:"180g",p:"36g",note:"Pan sear 4 min each side. Omega-3s reduce inflammation."},
+    {f:"Sweet potato",a:"200g",p:"3g",note:"Microwave whole for 8 min. No prep."},
+    {f:"Asparagus or green beans",a:"150g",p:"3g",note:"Air fry with olive oil — 10 min."},
+    {f:"Olive oil",a:"1 tbsp",p:"0g",note:"For cooking."},
+    {f:"Garlic + herbs",a:"to taste",p:"0g",note:"Flavor without dairy."},
+   ],tip:"Rotate salmon with ground turkey, lean beef, shrimp, or chicken thighs for variety."},
+];
+
+const STATIONS = [
+  {num:"01",name:"Ski Erg",dist:"1000m",xover:"Lats, core, shoulder endurance",cue:"Drive with hips, not just arms. Think lat pulldown."},
+  {num:"02",name:"Sled Push",dist:"50m",xover:"Quad & glute power, posture",cue:"Low hips, drive through balls of your feet."},
+  {num:"03",name:"Sled Pull",dist:"50m",xover:"Posterior chain, grip",cue:"Hinge the hips, pull in rows — don't lean back."},
+  {num:"04",name:"Burpee Broad Jumps",dist:"80m",xover:"Explosive hip extension — direct vertical carryover!",cue:"Jump distance over speed. Consistent length each rep."},
+  {num:"05",name:"Rowing",dist:"1000m",xover:"Full body endurance, posture",cue:"Legs first, then lean, then arms. Don't arm-row."},
+  {num:"06",name:"Farmers Carry",dist:"200m",xover:"Core stability, grip, posture",cue:"Brace your core. Tall spine throughout."},
+  {num:"07",name:"Sandbag Lunges",dist:"100m",xover:"Quad & glute endurance — trains jump muscles under fatigue!",cue:"Alternating knees. Own the tempo, don't rush."},
+  {num:"08",name:"Wall Balls",dist:"100 reps",xover:"Explosive triple extension — same pattern as vertical jump!",cue:"Catch in a squat, use momentum on the way up."},
+];
+
+const GROCERY = [
+  {cat:"Proteins",color:"#FF6B35",items:["Chicken breast — 1.5 kg","Salmon fillets — 4×180g","Canned tuna (water) — 5 cans","Eggs — 18 count","Egg whites (carton) — 1L","Turkey slices (deli) — 200g","Whey isolate or pea protein","LF cottage cheese — 2 tubs","Ground turkey — 500g (optional)"]},
+  {cat:"Carbs & Produce",color:"#4ECDC4",items:["Oats (rolled) — 1 large bag","Brown rice — 1 kg","White rice — 1 kg","Sweet potatoes — 6 medium","Bananas — 7 (1 per day)","Apples or oranges — 5","Broccoli — 1 large head","Baby carrots — 1 bag","Asparagus — 300g","Avocados — 3","Dates (for tournaments)"]},
+  {cat:"Pantry & Other",color:"#2D9E6B",items:["Almond butter (unsalted) — 1 jar","Mixed nuts (unsalted) — 200g","Rice cakes — 1 pack","Whole grain crackers — 1 box","Olive oil — 1 bottle","Oat milk (unsweetened) — 1L","Electrolyte packets (LMNT)","Hot sauce / mustard","Garlic, herbs, spices","Creatine monohydrate — 500g"]},
+];
+
+const SUPPS = [
+  {name:"Creatine Monohydrate",dose:"5g/day",when:"Any time (stay consistent)",why:"Most proven supplement for strength + vertical. No loading needed."},
+  {name:"Whey Isolate Protein",dose:"1-2 scoops",when:"Post-workout + snacks",why:"Isolate = very low lactose, safe for most. Hits protein targets."},
+  {name:"Vitamin D3",dose:"2,000–4,000 IU",when:"With breakfast",why:"Most indoor athletes are deficient. Supports testosterone + recovery."},
+  {name:"Magnesium Glycinate",dose:"300–400mg",when:"Before bed",why:"Improves sleep quality and muscle recovery. Crucial for your training volume."},
+  {name:"Electrolytes (LMNT)",dose:"1 packet",when:"During / after training",why:"Replaces sodium, potassium, magnesium lost in sweat. Prevents cramps."},
+  {name:"Fish Oil (Omega-3)",dose:"2-3g EPA+DHA",when:"With dinner",why:"Reduces inflammation from heavy training. Supports joint health."},
+  {name:"Caffeine (optional)",dose:"100–200mg",when:"60 min pre-workout",why:"Black coffee works fine. Avoid after 2pm."},
+];
+
+// ══════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════
+let curPhase = 'p1', curDay = 'mon';
+let checks = JSON.parse(localStorage.getItem('checks')||'{}');
+let gChecks = JSON.parse(localStorage.getItem('gchecks')||'{}');
+
+function saveChecks(){ localStorage.setItem('checks', JSON.stringify(checks)); }
+function saveGChecks(){ localStorage.setItem('gchecks', JSON.stringify(gChecks)); }
+
+// ══════════════════════════════════════════════
+// NAV
+// ══════════════════════════════════════════════
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.getElementById('nav-'+id).classList.add('active');
+  document.querySelector('.scroll-area').scrollTop=0;
+}
+
+// ══════════════════════════════════════════════
+// WORKOUT
+// ══════════════════════════════════════════════
+function renderPhaseRow(){
+  document.getElementById('phase-row').innerHTML = Object.entries(PHASES).map(([k,v])=>
+    `<button class="phase-btn${k===curPhase?' active':''}" onclick="setPhase('${k}')">
+      <span class="pb-name">${v.label}</span><span class="pb-dates">${v.dates}</span>
+    </button>`).join('');
+}
+function setPhase(k){ curPhase=k; curDay=PHASES[k].days[0].id; renderWorkout(); }
+function setDay(id){ curDay=id; renderDay(); }
+
+function renderWorkout(){
+  renderPhaseRow();
+  const ph = PHASES[curPhase];
+  document.getElementById('phase-desc').innerHTML = ph.desc;
+  document.getElementById('day-row').innerHTML = ph.days.map(d=>
+    `<button class="day-pill${d.id===curDay?' active':''}" onclick="setDay('${d.id}')">${d.label}</button>`
+  ).join('');
+  renderDay();
+}
+
+function renderDay(){
+  document.querySelectorAll('.day-pill').forEach(p=>p.classList.remove('active'));
+  const pill = document.querySelector(`.day-pill[onclick="setDay('${curDay}')"]`);
+  if(pill) pill.classList.add('active');
+
+  const ph = PHASES[curPhase];
+  const day = ph.days.find(d=>d.id===curDay);
+  document.getElementById('day-hdr').innerHTML =
+    `<div><div class="day-hdr-title">${day.title}</div><div class="day-hdr-sub">${day.sub}</div></div>
+     <div class="day-badge">${day.badge}</div>`;
+
+  const key = `${curPhase}_${curDay}`;
+  const done = (checks[key]||[]);
+  const total = day.ex.length;
+  const count = done.length;
+  const pct = total ? Math.round(count/total*100) : 0;
+
+  document.getElementById('progress-wrap').innerHTML =
+    `<div class="progress-label"><span>${count} / ${total} complete</span><span>${pct}%</span></div>
+     <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>`;
+
+  document.getElementById('ex-list').innerHTML = day.ex.map((ex,i)=>{
+    const isDone = done.includes(i);
+    return `<div class="ex-item${isDone?' done':''}" id="ex-${i}">
+      <div class="ex-top" onclick="toggleCheck(${i})">
+        <div class="ex-check">${isDone?'✓':''}</div>
+        <div class="ex-info">
+          <div class="ex-name">${ex.n}</div>
+          ${ex.s!=='—'?`<div class="ex-scheme">${ex.s} sets × ${ex.r}</div>`:''}
+        </div>
+        ${ex.note?`<div class="ex-arr" onclick="event.stopPropagation();toggleNote(${i})">›</div>`:''}
+      </div>
+      ${ex.note?`<div class="ex-note-area">💡 ${ex.note}</div>`:''}
+    </div>`;
+  }).join('');
+
+  document.getElementById('tourn-note-area').innerHTML = day.tourn
+    ? `<div class="tourn-note"><strong>Tournament weeks:</strong> Skip this session entirely. Compete, fuel well, recover. 8 hours of competitive volleyball is more than enough.</div>` : '';
+}
+
+function toggleCheck(i){
+  const key=`${curPhase}_${curDay}`;
+  if(!checks[key]) checks[key]=[];
+  const idx=checks[key].indexOf(i);
+  if(idx>-1) checks[key].splice(idx,1); else checks[key].push(i);
+  saveChecks(); renderDay();
+}
+function toggleNote(i){
+  document.getElementById('ex-'+i).classList.toggle('open');
+}
+function resetDay(){
+  const key=`${curPhase}_${curDay}`;
+  checks[key]=[];
+  saveChecks(); renderDay();
+}
+
+// ══════════════════════════════════════════════
+// MEALS
+// ══════════════════════════════════════════════
+function renderMeals(){
+  document.getElementById('meal-list').innerHTML = MEALS.map((m,i)=>
+    `<div class="meal-card" id="meal-${i}">
+      <div class="meal-hdr" style="background:${m.color}18" onclick="toggleMeal(${i})">
+        <span class="meal-num-badge">MEAL ${m.num}</span>
+        <span class="meal-title">${m.name}</span>
+        <span class="meal-time-tag">${m.time}</span>
+        <span class="meal-kcal" style="color:${m.color}">${m.cal}cal</span>
+        <span class="meal-arr">›</span>
+      </div>
+      <div class="meal-body-area">
+        <table class="food-table">
+          <tr><th>Food</th><th>Amount</th><th>Protein</th><th>Notes</th></tr>
+          ${m.foods.map(f=>`<tr><td>${f.f}</td><td>${f.a}</td><td>${f.p}</td><td>${f.note}</td></tr>`).join('')}
+        </table>
+        <div class="meal-tip-bar">${m.tip}</div>
+      </div>
+    </div>`
+  ).join('');
+}
+function toggleMeal(i){ document.getElementById('meal-'+i).classList.toggle('open'); }
+
+// ══════════════════════════════════════════════
+// STATIONS
+// ══════════════════════════════════════════════
+function renderStations(){
+  document.getElementById('station-list').innerHTML = STATIONS.map(s=>
+    `<div class="station-item">
+      <div class="station-top">
+        <span class="station-num">${s.num}</span>
+        <span class="station-name">${s.name}</span>
+        <span class="station-dist">${s.dist}</span>
+      </div>
+      <div class="station-xover">🏐 ${s.xover}</div>
+      <div class="station-cue">⚡ ${s.cue}</div>
+    </div>`
+  ).join('');
+}
+
+// ══════════════════════════════════════════════
+// GROCERY
+// ══════════════════════════════════════════════
+function renderGrocery(){
+  document.getElementById('grocery-list').innerHTML = GROCERY.map(cat=>
+    `<div class="grocery-sec">
+      <div class="grocery-hdr" style="background:${cat.color}18;color:${cat.color}">${cat.cat.toUpperCase()}</div>
+      <div class="grocery-items">
+        ${cat.items.map((item,i)=>{
+          const gkey=`${cat.cat}_${i}`;
+          const checked=gChecks[gkey];
+          return `<div class="grocery-row${checked?' checked':''}" onclick="toggleGrocery('${cat.cat}',${i})">
+            <div class="grocery-check">${checked?'✓':''}</div>
+            <span>${item}</span>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`
+  ).join('');
+}
+function toggleGrocery(cat,i){
+  const gkey=`${cat}_${i}`;
+  gChecks[gkey]=!gChecks[gkey];
+  saveGChecks(); renderGrocery();
+}
+function resetGrocery(){ gChecks={}; saveGChecks(); renderGrocery(); }
+
+// ══════════════════════════════════════════════
+// SUPPLEMENTS
+// ══════════════════════════════════════════════
+function renderSupps(){
+  document.getElementById('supp-list').innerHTML = SUPPS.map(s=>
+    `<div class="supp-item">
+      <div class="supp-top"><span class="supp-name">${s.name}</span><span class="supp-dose">${s.dose}</span></div>
+      <div class="supp-meta">${s.when}</div>
+      <div class="supp-why">${s.why}</div>
+    </div>`
+  ).join('');
+}
+
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+renderWorkout();
+renderMeals();
+renderStations();
+renderGrocery();
+renderSupps();
+</script>
+</body>
+</html>
